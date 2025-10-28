@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍓 Fruit Memory Game</title>
+<style>
+  body {
+    background: linear-gradient(135deg, #ffecd2, #fcb69f);
+    background-size: 400% 400%;
+    animation: gradientShift 10s ease infinite;
+    font-family: "Poppins", sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  header img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid #0d47a1;
+    margin-top: 20px;
+    box-shadow: 0 0 20px rgba(13, 71, 161, 0.5);
+  }
+
+  h1 {
+    color: #0d47a1;
+    font-size: 30px;
+    margin: 10px 0;
+  }
+
+  marquee {
+    background-color: #0d47a1;
+    color: white;
+    padding: 10px;
+    font-weight: bold;
+  }
+
+  .difficulty {
+    margin: 15px 0;
+  }
+
+  .difficulty button {
+    background: #1565c0;
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 0 5px;
+    font-size: 15px;
+    transition: 0.3s;
+  }
+
+  .difficulty button.active {
+    background: #00c853;
+  }
+
+  .difficulty button:hover {
+    background: #0d47a1;
+    transform: scale(1.05);
+  }
+
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin: 15px 0;
+    color: #0d47a1;
+    font-size: 18px;
+    font-weight: bold;
+    flex-wrap: wrap;
+  }
+
+  .game-board {
+    display: grid;
+    grid-gap: 10px;
+    justify-content: center;
+    margin: 20px auto;
+    perspective: 1000px;
+  }
+
+  .card {
+    width: 100px;
+    height: 100px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+    cursor: pointer;
+  }
+
+  .card.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    backface-visibility: hidden;
+    border: 2px solid #0d47a1;
+  }
+
+  .card-front {
+    background-color: #64b5f6;
+  }
+
+  .card-back {
+    background-color: #ffffff;
+    transform: rotateY(180deg);
+    color: #1565c0;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  }
+
+  .matched {
+    animation: fadeOut 0.8s forwards ease;
+  }
+
+  @keyframes fadeOut {
+    0% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0.5); }
+  }
+
+  button.restart {
+    background: #1565c0;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 10px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+  }
+
+  button.restart:hover {
+    background: #0d47a1;
+    transform: scale(1.05);
+  }
+
+  footer {
+    margin-top: 40px;
+    font-size: 14px;
+    color: #0d47a1;
+    line-height: 1.5;
+  }
+
+  #successModal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex; justify-content: center; align-items: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.5s ease;
+    z-index: 999;
+  }
+
+  #successModal.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal-content {
+    background: white;
+    padding: 40px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    animation: popIn 0.5s ease;
+  }
+
+  @keyframes popIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* GOOD EFFECT */
+  #goodEffect {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    font-size: 60px;
+    color: #ffeb3b;
+    text-shadow: 2px 2px 10px #0d47a1;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.5s ease;
+    z-index: 1000;
+  }
+
+  #goodEffect.show {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+
+  .confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    top: 0;
+    z-index: 1000;
+    opacity: 0.8;
+    animation: fall 3s linear forwards;
+  }
+
+  @keyframes fall {
+    0% { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="c:\\Users\\DESKTOP\\Pictures\\c.png" alt="Colegio De Montalban Logo">
+  <h1>🍇 Fruit Memory Game</h1>
+</header>
+
+<marquee>
+  🎓 Welcome to the Fruit Memory Game by Daniel Sto. Domingo Jr., Frtichgerald Galan, and Ron Angelo Albar! |
+  Match all fruits to test your memory! 🍎🍌🍇🍊
+</marquee>
+
+<div class="difficulty">
+  <button onclick="setDifficulty('easy')" class="active">🟢 Easy</button>
+  <button onclick="setDifficulty('medium')">🟡 Medium</button>
+  <button onclick="setDifficulty('hard')">🔴 Hard</button>
+</div>
+
+<div class="stats">
+  <div>⏱️ Time: <span id="timer">0</span> s</div>
+  <div>🏆 Best Time: <span id="bestTime">--</span> s</div>
+  <div>🎯 Score: <span id="score">0</span></div>
+</div>
+
+<div class="game-board" id="gameBoard"></div>
+<button class="restart" onclick="startGame()">🔄 Restart Game</button>
+
+<div id="goodEffect">✨ GOOD! ✨</div>
+
+<footer>
+  © 2025 Colegio De Montalban | BSIT Project <br>
+  Developed by <b>Daniel Sto. Domingo Jr.</b> <br>
+  With contributions from <b>Frtichgerald Galan</b> and <b>Ron Angelo Albar</b>
+</footer>
+
+<div id="successModal">
+  <div class="modal-content">
+    <h2>🎉 Congratulations! 🎉</h2>
+    <p>You matched all fruits in <span id="finalTime"></span> seconds!</p>
+    <p>Your score: <span id="finalScore"></span></p>
+    <button onclick="closeModal()">Play Again</button>
+  </div>
+</div>
+
+<script>
+  const allSymbols = ['🍎','🍌','🍇','🍊','🍉','🍓','🍍','🥝','🍋','🍒','🥥','🍑','🍐','🍈','🍏','🍅','🥭','🥑'];
+  let difficulty = 'easy', symbols = [], firstCard = null, secondCard = null, lockBoard = false;
+  let timer = 0, timerInterval = null, matchedPairs = 0, score = 0, bestTime = localStorage.getItem('bestTime');
+  const timerDisplay = document.getElementById('timer');
+  const bestTimeDisplay = document.getElementById('bestTime');
+  const scoreDisplay = document.getElementById('score');
+  const successModal = document.getElementById('successModal');
+  const goodEffect = document.getElementById('goodEffect');
+  if (bestTime) bestTimeDisplay.textContent = bestTime;
+
+  function setDifficulty(level) {
+    difficulty = level;
+    document.querySelectorAll('.difficulty button').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    startGame();
+  }
+
+  function startGame() {
+    const board = document.getElementById('gameBoard');
+    board.innerHTML = '';
+    matchedPairs = 0; score = 0; timer = 0;
+    timerDisplay.textContent = 0;
+    scoreDisplay.textContent = 0;
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => timerDisplay.textContent = ++timer, 1000);
+
+    let pairs;
+    if (difficulty === 'easy') { pairs = 8; board.style.gridTemplateColumns = 'repeat(4, 100px)'; }
+    else if (difficulty === 'medium') { pairs = 10; board.style.gridTemplateColumns = 'repeat(5, 100px)'; }
+    else { pairs = 18; board.style.gridTemplateColumns = 'repeat(6, 90px)'; }
+
+    symbols = allSymbols.slice(0, pairs);
+    const cards = [...symbols, ...symbols].sort(() => 0.5 - Math.random());
+    cards.forEach(symbol => {
+      const card = document.createElement('div');
+      card.classList.add('card');
+      card.innerHTML = `
+        <div class="card-face card-front"></div>
+        <div class="card-face card-back">${symbol}</div>
+      `;
+      card.addEventListener('click', flipCard);
+      board.appendChild(card);
+    });
+  }
+
+  function flipCard() {
+    if (lockBoard || this === firstCard) return;
+    this.classList.add('flipped');
+    if (!firstCard) { firstCard = this; return; }
+    secondCard = this;
+    checkMatch();
+  }
+
+  function checkMatch() {
+    const match = firstCard.querySelector('.card-back').textContent === secondCard.querySelector('.card-back').textContent;
+    match ? handleMatch() : handleNoMatch();
+  }
+
+  function handleMatch() {
+    lockBoard = true;
+    matchedPairs++; score += 10; scoreDisplay.textContent = score;
+    firstCard.classList.add('matched'); secondCard.classList.add('matched');
+    showGoodEffect();
+    setTimeout(() => {
+      firstCard.remove(); secondCard.remove();
+      resetBoard(); lockBoard = false;
+      if (matchedPairs === symbols.length) {
+        clearInterval(timerInterval);
+        showSuccess(); checkBestTime();
+      }
+    }, 700);
+  }
+
+  function handleNoMatch() {
+    lockBoard = true;
+    score -= 2; scoreDisplay.textContent = score;
+    setTimeout(() => {
+      firstCard.classList.remove('flipped');
+      secondCard.classList.remove('flipped');
+      resetBoard();
+    }, 1000);
+  }
+
+  function resetBoard() { [firstCard, secondCard, lockBoard] = [null, null, false]; }
+
+  function showGoodEffect() {
+    goodEffect.classList.add('show');
+    setTimeout(() => goodEffect.classList.remove('show'), 800);
+  }
+
+  function checkBestTime() {
+    if (!bestTime || timer < bestTime) {
+      bestTime = timer;
+      localStorage.setItem('bestTime', bestTime);
+      bestTimeDisplay.textContent = bestTime;
+    }
+  }
+
+  function showSuccess() {
+    document.getElementById('finalTime').textContent = timer;
+    document.getElementById('finalScore').textContent = score;
+    successModal.classList.add('show');
+    createConfetti();
+  }
+
+  function closeModal() {
+    successModal.classList.remove('show');
+    startGame();
+  }
+
+  function createConfetti() {
+    for (let i = 0; i < 100; i++) {
+      const confetti = document.createElement('div');
+      confetti.classList.add('confetti');
+      confetti.style.left = Math.random() * window.innerWidth + 'px';
+      confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+      confetti.style.animationDuration = 2 + Math.random() * 3 + 's';
+      document.body.appendChild(confetti);
+      setTimeout(() => confetti.remove(), 4000);
+    }
+  }
+
+  startGame();
+</script>
+</body>
+</html>
